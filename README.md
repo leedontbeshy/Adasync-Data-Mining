@@ -13,6 +13,8 @@ project_root/
 │       └── uci_wdbc/
 │           ├── wdbc.data
 │           └── wdbc.names
+├── docs/
+│   └── quy_dinh_pipeline_thuc_nghiem.md
 ├── src/
 │   ├── __init__.py
 │   └── data_preprocessing.py
@@ -32,10 +34,16 @@ Chứa dữ liệu dùng cho notebook.
 
 ### `src/`
 
-Chứa các hàm hỗ trợ đúng phạm vi pipeline 
+Chứa các hàm hỗ trợ đúng phạm vi pipeline của Phúc.
 
 - `src/__init__.py`: giúp Python nhận `src` là package để notebook import được.
 - `src/data_preprocessing.py`: chứa hàm tách `X/y`, train/test split, preprocessing bằng imputer + scaler, và checklist chống data leakage.
+
+### `docs/`
+
+Chứa tài liệu viết để đưa vào báo cáo hoặc tiểu luận.
+
+- `docs/quy_dinh_pipeline_thuc_nghiem.md`: quy định train/test split, `stratify`, `random_state`, preprocessing, model và metric đánh giá.
 
 ### `results/`
 
@@ -94,6 +102,8 @@ Notebook hiện có các phần chính theo người phụ trách:
 
 ## 5. Quy tắc pipeline đã chốt
 
+Chi tiết đầy đủ nằm trong `docs/quy_dinh_pipeline_thuc_nghiem.md`.
+
 - Split train/test trước mọi bước resampling.
 - Dùng `train_test_split(test_size=0.2, stratify=y, random_state=42)`.
 - Không đưa cột `id` vào training.
@@ -115,5 +125,3 @@ confusion_matrix_smote.png
 confusion_matrix_adasyn.png
 metric_comparison_chart.png
 ```
-
-
