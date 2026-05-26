@@ -1,1 +1,6 @@
 private.md
+.venv/
+.serena/
+__pycache__/
+*.py[cod]
+results/*_executed*.ipynb
