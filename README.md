@@ -1,5 +1,9 @@
 # ADASYN Demo
 
+Project này xây dựng notebook thực nghiệm cho bài toán phân loại Breast Cancer Wisconsin Diagnostic, tập trung so sánh pipeline baseline với các kỹ thuật xử lý mất cân bằng dữ liệu như Random Oversampling, Random Undersampling, SMOTE và ADASYN.
+
+Mục tiêu chung là giữ toàn bộ thí nghiệm trên cùng một quy trình tiền xử lý, chia dữ liệu, huấn luyện và đánh giá để kết quả giữa các phương pháp có thể so sánh công bằng.
+
 ## 1. Cấu trúc thư mục
 
 ```text
@@ -14,11 +18,14 @@ project_root/
 │           ├── wdbc.data
 │           └── wdbc.names
 ├── docs/
-│   └── quy_dinh_pipeline_thuc_nghiem.md
+│   ├── quy_dinh_pipeline_thuc_nghiem.md
+│   └── preprocessing_train_test.md
 ├── src/
 │   ├── __init__.py
 │   └── data_preprocessing.py
 └── results/
+    ├── class_distribution.png
+    └── train_test_class_distribution.csv
 ```
 
 ## 2. Các thư mục và file chính
@@ -34,22 +41,28 @@ Chứa dữ liệu dùng cho notebook.
 
 ### `src/`
 
-Chứa các hàm hỗ trợ đúng phạm vi pipeline của Phúc.
+Chứa các hàm hỗ trợ dùng lại trong notebook.
 
 - `src/__init__.py`: giúp Python nhận `src` là package để notebook import được.
-- `src/data_preprocessing.py`: chứa hàm tách `X/y`, train/test split, preprocessing bằng imputer + scaler, và checklist chống data leakage.
+- `src/data_preprocessing.py`: chứa hàm tách `X/y`, train/test split, preprocessing numeric/categorical features, và checklist chống data leakage.
 
 ### `docs/`
 
 Chứa tài liệu viết để đưa vào báo cáo hoặc tiểu luận.
 
 - `docs/quy_dinh_pipeline_thuc_nghiem.md`: quy định train/test split, `stratify`, `random_state`, preprocessing, model và metric đánh giá.
+- `docs/preprocessing_train_test.md`: mô tả chi tiết bước preprocessing, split train/test, tỷ lệ class sau split và kiểm tra chống data leakage.
 
 ### `results/`
 
-Chứa kết quả sau khi các phần thí nghiệm được hoàn thiện.
+Chứa kết quả được sinh ra trong quá trình chạy notebook.
 
-Hiện tại thư mục này chỉ có `.gitkeep` để giữ thư mục rỗng. Sau khi nhóm chạy đủ các phương pháp, các file như bảng metric, confusion matrix và biểu đồ so sánh sẽ được lưu ở đây.
+Hiện tại đã có:
+
+- `results/class_distribution.png`: biểu đồ phân phối class ban đầu.
+- `results/train_test_class_distribution.csv`: bảng tỷ lệ class của full dataset, train set và test set sau khi chia bằng stratify.
+
+Sau khi nhóm chạy đủ các phương pháp, các file như bảng metric, confusion matrix và biểu đồ so sánh cũng sẽ được lưu ở đây.
 
 ### File ở thư mục gốc
 
@@ -110,6 +123,7 @@ Chi tiết đầy đủ nằm trong `docs/quy_dinh_pipeline_thuc_nghiem.md`.
 - Ép toàn bộ feature về dạng số.
 - Nếu có missing values, impute bằng median.
 - Scale feature bằng `StandardScaler`.
+- Nếu có categorical features, xử lý bằng imputer phù hợp và encode trước khi training.
 - Fit preprocessing chỉ trên train; test set chỉ được transform.
 - Test set không được oversample, undersample, SMOTE hoặc ADASYN.
 - Tất cả metric cuối cùng phải đánh giá trên test set gốc.
@@ -119,6 +133,8 @@ Chi tiết đầy đủ nằm trong `docs/quy_dinh_pipeline_thuc_nghiem.md`.
 Sau khi các thành viên phụ trách điền tiếp phần của mình, thư mục `results/` có thể chứa:
 
 ```text
+class_distribution.png
+train_test_class_distribution.csv
 metrics_comparison.csv
 confusion_matrix_baseline.png
 confusion_matrix_smote.png
