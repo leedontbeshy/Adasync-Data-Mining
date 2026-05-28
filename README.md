@@ -1,8 +1,8 @@
 # ADASYN Demo
 
-Project này xây dựng notebook thực nghiệm cho bài toán phân loại Breast Cancer Wisconsin Diagnostic, tập trung so sánh pipeline baseline với các kỹ thuật xử lý mất cân bằng dữ liệu như Random Oversampling, Random Undersampling, SMOTE và ADASYN.
+Project này là notebook thực nghiệm cho bài toán phân loại Breast Cancer Wisconsin Diagnostic. Mục tiêu là so sánh Baseline, Random Oversampling, Random Undersampling, SMOTE và ADASYN trên cùng một pipeline để đánh giá ảnh hưởng của các kỹ thuật xử lý mất cân bằng dữ liệu.
 
-Mục tiêu chung là giữ toàn bộ thí nghiệm trên cùng một quy trình tiền xử lý, chia dữ liệu, huấn luyện và đánh giá để kết quả giữa các phương pháp có thể so sánh công bằng.
+Quy tắc quan trọng nhất: split train/test trước, preprocessing chỉ fit trên train, resampling chỉ chạy trên train, và test set gốc chỉ dùng để đánh giá cuối cùng.
 
 ## 1. Cấu trúc thư mục
 
@@ -18,74 +18,58 @@ project_root/
 │           ├── wdbc.data
 │           └── wdbc.names
 ├── docs/
-│   ├── quy_dinh_pipeline_thuc_nghiem.md
-│   └── preprocessing_train_test.md
+│   ├── evaluation_metrics_and_result_table_schema.md
+│   ├── preprocessing_train_test.md
+│   └── quy_dinh_pipeline_thuc_nghiem.md
 ├── src/
 │   ├── __init__.py
 │   └── data_preprocessing.py
 └── results/
-    ├── class_distribution.png
+    ├── metrics_comparison.csv
+    ├── confusion_matrix_*.png
+    ├── metrics_comparison_*.png
+    ├── roc_curves_comparison.png
+    ├── pr_curves_comparison.png
     └── train_test_class_distribution.csv
 ```
 
-## 2. Các thư mục và file chính
+## 2. Dataset
 
-### `data/`
-
-Chứa dữ liệu dùng cho notebook.
-
-- `data/raw/`: dữ liệu gốc, giữ nguyên theo nguồn tải về.
-- `data/raw/README.md`: mô tả nguồn dataset, lý do chọn dataset, target column và class distribution ban đầu.
-- `data/raw/uci_wdbc/wdbc.data`: file dữ liệu chính được notebook đọc.
-- `data/raw/uci_wdbc/wdbc.names`: mô tả gốc của dataset từ UCI.
-
-### `src/`
-
-Chứa các hàm hỗ trợ dùng lại trong notebook.
-
-- `src/__init__.py`: giúp Python nhận `src` là package để notebook import được.
-- `src/data_preprocessing.py`: chứa hàm tách `X/y`, train/test split, preprocessing numeric/categorical features, và checklist chống data leakage.
-
-### `docs/`
-
-Chứa tài liệu viết để đưa vào báo cáo hoặc tiểu luận.
-
-- `docs/quy_dinh_pipeline_thuc_nghiem.md`: quy định train/test split, `stratify`, `random_state`, preprocessing, model và metric đánh giá.
-- `docs/preprocessing_train_test.md`: mô tả chi tiết bước preprocessing, split train/test, tỷ lệ class sau split và kiểm tra chống data leakage.
-
-### `results/`
-
-Chứa kết quả được sinh ra trong quá trình chạy notebook.
-
-Hiện tại đã có:
-
-- `results/class_distribution.png`: biểu đồ phân phối class ban đầu.
-- `results/train_test_class_distribution.csv`: bảng tỷ lệ class của full dataset, train set và test set sau khi chia bằng stratify.
-
-Sau khi nhóm chạy đủ các phương pháp, các file như bảng metric, confusion matrix và biểu đồ so sánh cũng sẽ được lưu ở đây.
-
-### File ở thư mục gốc
-
-- `demo_adasyn.ipynb`: notebook khung theo phân công từng thành viên.
-- `requirements.txt`: danh sách thư viện cần cài để chạy notebook.
-- `README.md`: hướng dẫn cấu trúc project, cách cài thư viện, cách chạy notebook và quy tắc pipeline.
-
-Dataset được đọc từ:
+Notebook đọc dữ liệu từ:
 
 ```text
 data/raw/uci_wdbc/wdbc.data
 ```
 
-Trong file dữ liệu gốc:
+Nếu clone project mới, đặt file UCI WDBC vào đúng thư mục:
 
-- Cột 1: `id`, không đưa vào quá trình huấn luyện.
-- Cột 2: `diagnosis`, gồm hai nhãn `B` và `M`.
-- 30 cột còn lại: các đặc trưng dạng số.
-- Nhãn minority/positive dùng để đánh giá: `M` (Malignant).
+```text
+data/raw/uci_wdbc/
+├── wdbc.data
+└── wdbc.names
+```
+
+Thông tin chính:
+
+- Dataset: Breast Cancer Wisconsin Diagnostic.
+- Target column: `diagnosis`.
+- Class labels: `B` = Benign, `M` = Malignant.
+- Positive/minority class dùng để tính metric: `M`.
+- Feature dùng để train: 30 cột số, không dùng cột `id`.
+- Phân phối ban đầu: `B` = 357 mẫu, `M` = 212 mẫu.
 
 ## 3. Cài thư viện
 
-Chạy lệnh sau từ thư mục gốc của project:
+Khuyến nghị tạo môi trường ảo trước khi cài thư viện. Chạy các lệnh sau từ thư mục gốc project:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+Nếu không dùng virtual environment, vẫn có thể cài trực tiếp:
 
 ```powershell
 python -m pip install -r requirements.txt
@@ -93,51 +77,83 @@ python -m pip install -r requirements.txt
 
 ## 4. Chạy notebook
 
-Từ thư mục gốc của project:
-
-```powershell
-jupyter notebook demo_adasyn.ipynb
-```
-
-Nếu lệnh `jupyter` chưa có trong `PATH`, dùng:
+Mở notebook bằng Jupyter:
 
 ```powershell
 python -m jupyter notebook demo_adasyn.ipynb
 ```
 
-Notebook hiện có các phần chính theo người phụ trách:
+Trong Jupyter, chọn `Kernel -> Restart & Run All` để chạy lại toàn bộ từ đầu. Notebook đã dùng đường dẫn tương đối theo thư mục project, nên nên mở Jupyter từ thư mục gốc này.
 
-- Phúc: import, cấu hình pipeline, preprocessing, train/test split và checklist chống data leakage.
-- Quang: load data, kiểm tra dữ liệu đầu vào, EDA và class distribution.
-- Quân: Baseline, Random Oversampling, Random Undersampling.
-- Phước: SMOTE, ADASYN và thử `k_neighbors`.
-- Quyên: metrics, confusion matrix và biểu đồ so sánh.
+Có thể chạy notebook dạng headless để kiểm tra nhanh:
 
-## 5. Quy tắc pipeline đã chốt
+```powershell
+python -m jupyter nbconvert --to notebook --execute --inplace demo_adasyn.ipynb
+```
 
-Chi tiết đầy đủ nằm trong `docs/quy_dinh_pipeline_thuc_nghiem.md`.
+## 5. Pipeline thực nghiệm
 
-- Split train/test trước mọi bước resampling.
-- Dùng `train_test_split(test_size=0.2, stratify=y, random_state=42)`.
-- Không đưa cột `id` vào training.
-- Ép toàn bộ feature về dạng số.
-- Nếu có missing values, impute bằng median.
-- Scale feature bằng `StandardScaler`.
-- Nếu có categorical features, xử lý bằng imputer phù hợp và encode trước khi training.
-- Fit preprocessing chỉ trên train; test set chỉ được transform.
-- Test set không được oversample, undersample, SMOTE hoặc ADASYN.
-- Tất cả metric cuối cùng phải đánh giá trên test set gốc.
+Pipeline chuẩn nằm trong `src/data_preprocessing.py` và được mô tả thêm ở `docs/quy_dinh_pipeline_thuc_nghiem.md`.
 
-## 6. Output kỳ vọng
+- Tách `X/y`, loại `id` khỏi feature.
+- Chia dữ liệu bằng `train_test_split(test_size=0.2, stratify=y, random_state=42)`.
+- Fit `SimpleImputer(strategy="median")` và `StandardScaler` trên train.
+- Transform test bằng preprocessor đã fit trên train.
+- Train Logistic Regression với cùng cấu hình cho mọi phương pháp.
+- Chỉ resampling trên `X_train_processed, y_train`.
+- Đánh giá tất cả phương pháp trên `X_test_processed, y_test`.
 
-Sau khi các thành viên phụ trách điền tiếp phần của mình, thư mục `results/` có thể chứa:
+## 6. Kiểm tra data leakage
+
+Notebook có phần `Phúc - Checklist chống data leakage` để kiểm tra:
+
+- Train/test indices tách biệt.
+- Preprocessing không làm đổi số dòng train/test.
+- Test set chỉ được transform, không bị resampling.
+- `fit_resample` xuất hiện sau cell split.
+- Không có lệnh `fit_resample` nào dùng `X_test` hoặc `y_test`.
+- Test features và test labels không thay đổi sau các cell resampling.
+
+Khi thêm phương pháp mới, dùng mẫu sau:
+
+```python
+sampler = SomeSampler(random_state=RANDOM_STATE)
+X_train_new, y_train_new = sampler.fit_resample(X_train_processed, y_train)
+model.fit(X_train_new, y_train_new)
+y_pred = model.predict(X_test_processed)
+```
+
+Không dùng `fit_resample` với `X_test_processed` hoặc `y_test`.
+
+## 7. Đọc kết quả
+
+Bảng metric chính nằm ở:
 
 ```text
-class_distribution.png
-train_test_class_distribution.csv
-metrics_comparison.csv
-confusion_matrix_baseline.png
-confusion_matrix_smote.png
-confusion_matrix_adasyn.png
-metric_comparison_chart.png
+results/metrics_comparison.csv
 ```
+
+Các cột trong bảng:
+
+- `Method`: tên phương pháp.
+- `Precision`: precision của lớp `M`.
+- `Recall`: recall của lớp `M`.
+- `F1-score`: F1-score của lớp `M`.
+- `ROC-AUC`: khả năng phân tách hai lớp trên nhiều ngưỡng.
+- `PR-AUC`: Average Precision, hữu ích cho dữ liệu mất cân bằng.
+
+Các hình kết quả chính:
+
+- `results/confusion_matrix_baseline.png`
+- `results/confusion_matrix_random_oversampling.png`
+- `results/confusion_matrix_random_undersampling.png`
+- `results/confusion_matrix_smote.png`
+- `results/confusion_matrix_adasyn.png`
+- `results/metrics_comparison_bars.png`
+- `results/metrics_comparison_grouped.png`
+- `results/metrics_comparison_heatmap.png`
+- `results/roc_curves_comparison.png`
+- `results/pr_curves_comparison.png`
+
+Nhận xét nhanh theo kết quả hiện tại: các phương pháp resampling cải thiện Recall/F1 của lớp `M` so với Baseline, nhưng ADASYN không vượt SMOTE về ROC-AUC và PR-AUC trên split này. Vì vậy kết luận nên nhấn mạnh trade-off giữa Precision, Recall, PR-AUC và đặc điểm dữ liệu, không kết luận ADASYN luôn tốt nhất.
+
